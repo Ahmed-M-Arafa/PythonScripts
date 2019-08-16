@@ -152,5 +152,10 @@ if len(sys.argv) > 1:
 else:
     URL = input ("URL: ")
     while True:
-        Process(URL)
-        timer (20)
+        try:
+            Process(URL)
+            timer (20)
+        except KeyboardInterrupt:
+            print ("Stop monitoring")
+            print ("Bye ...")
+            sys.exit(0)
