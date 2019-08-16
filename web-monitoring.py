@@ -87,7 +87,7 @@ def status_code(url):
 def display(url, code):
     now = strftime("%d-%m-%Y %H:%M:%S", time.localtime())
     if code == 200:
-        msg = print ("%s %s is UP" %(now, url))
+        msg = print ("%s %s is UP" % (now, url))
     elif code == 403:
         msg = print ("%s %s is Forbidden" % (now, url))
         msg_box = ("is 403 Forbidden")
