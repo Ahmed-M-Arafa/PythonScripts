@@ -1,6 +1,6 @@
 #!/bin/env python3
 
-#import pdb; pdb.set_trace()
+#import pdb; pdb.set_trace()         #Debugger
 
 import pymsgbox                      #For POPUP
 import os                            #System Commands
@@ -13,6 +13,7 @@ import requests                      #Website requests
 import time                          #Timing
 from time import gmtime, strftime    #Timig
 import pyttsx3                       #Convert Text to Speach
+
 
 #Alert POPUP
 def AlertBox(URL, Msg):
@@ -43,7 +44,6 @@ def NetworkStatus():
         Network = "Down"
         return Network
 
-
 #Strip scheme from URL
 def stripper(ParsedUrl):
     parsed = urlparse(ParsedUrl)
@@ -56,7 +56,6 @@ def query(Url):
     try:
         IP = socket.gethostbyname(Url)
         return IP
-    #except socket.gaierror:
     except (socket.error, socket.gaierror) as ex:
         IP = "ERROR: No records found OR wrong domain"
         return IP
@@ -75,7 +74,7 @@ def StatusCode(URL):
     Status = requests.get(URL).status_code
     return Status
 
-
+#Process steps
 def Process(URL):
     NetStatus = NetworkStatus()
     if NetStatus == "On":
@@ -121,22 +120,27 @@ def timer(t):
         time.sleep(1)
         t -= 1
 
-
 #Voice Alert
 def VoiceAlert():
     engine = pyttsx3.init()
     engine.say("Check Website")
     engine.runAndWait()
 
+#Create Log File
+def LogFile(FileName):
+    try:
+        f = open('%s.log' %FileName,'r')
+    except FileNotFoundError:
+        f = open('%s.log' %FileName,'w')
+
+    return f
+
+
 '''
 Script starts Here
 '''
-
-
-LogsDir()
-
-LogFormat = logging.basicConfig(filename='URL',format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-logger = logging.getLogger(__name__)
+#LogsDir()
+#LogFormat = logging.basicConfig(filename='%s' %FileName,format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
 if len(sys.argv) > 1:
@@ -151,6 +155,7 @@ if len(sys.argv) > 1:
             sys.exit(0)
 else:
     URL = input ("URL: ")
+    FileName = stripper(URL) 
     while True:
         try:
             Process(URL)
