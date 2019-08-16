@@ -1,117 +1,128 @@
 #!/bin/env python3
 
-#import pdb; pdb.set_trace()         #Debugger
+# import pdb; pdb.set_trace()        # Debugger
 
-import pymsgbox                      #For POPUP
-import os                            #System Commands
-import sys, traceback                #KeyboardInterrupt
-import urllib.request                #In parsing
-from urllib.parse import urlparse    #Parser
-import logging                       #Logging
-import socket                        #In DNS "Get DOmain's IP"
-import requests                      #Website requests
-import time                          #Timing
-from time import gmtime, strftime    #Timig
-import pyttsx3                       #Convert Text to Speach
+import pymsgbox                      # For POPUP
+import os                            # System Commands
+import sys                           # KeyboardInterrupt
+import traceback                     # KeyboardInterrupt
+import urllib.request                # In parsing
+from urllib.parse import urlparse    # Parser
+import logging                       # Logging
+import socket                        # In dns "Get DOmain's ip"
+import requests                      # Website requests
+import time                          # Timing
+from time import gmtime, strftime    # Timig
+import pyttsx3                       # Convert Text to Speach
 
 
-#Alert POPUP
-def AlertBox(URL, Msg):
-    pymsgbox.alert(text="%s %s" %(URL, Msg), title='SOS')
+# Alert POPUP
+def alert_box(url, msg):
+    pymsgbox.alert(text="%s %s" % (url, msg), title='SOS')
 
-#Create "logs" drectory if not found
-def LogsDir():
+
+# Create "logs" drectory if not found
+def log_dir():
     if not os.path.exists("./logs"):
         os.makedirs("./logs")
 
-#Make sure the URL entered is in the proper format
-def UrlParser(URL):
-    p = urlparse("%s" %URL)
+
+# Make sure the url entered is in the proper format
+def usrl_parser(url):
+    p = urlparse("%s" % url)
     if p.scheme:
-        ParsedUrl = p.geturl()
-        return ParsedUrl
+        parsed_url = p.geturl()
+        return parsed_url
     else:
-        ParsedUrl = "http://%s" %p.geturl()
-        return ParsedUrl
+        parsed_url = "http://%s" % p.geturl()
+        return parsed_url
 
-#Check network connection
-def NetworkStatus():
+
+# Check network connection
+def network_status():
     try:
-        socket.create_connection(('google.com',80)) 
-        Network = "On"
-        return Network
+        socket.create_connection(('google.com', 80))
+        network = "On"
+        return network
     except socket.error as msg:
-        Network = "Down"
-        return Network
+        network = "Down"
+        return network
 
-#Strip scheme from URL
-def stripper(ParsedUrl):
-    parsed = urlparse(ParsedUrl)
+
+# Strip scheme from url
+def stripper(parsed_url):
+    parsed = urlparse(parsed_url)
     scheme = "%s://" % parsed.scheme
     Url = parsed.geturl().replace(scheme, '', 1)
     return Url
 
-#DNS Query
+
+# DNS Query
 def query(Url):
     try:
-        IP = socket.gethostbyname(Url)
-        return IP
+        ip = socket.gethostbyname(Url)
+        return ip
     except (socket.error, socket.gaierror) as ex:
-        IP = "ERROR: No records found OR wrong domain"
-        return IP
+        ip = "ERROR: No records found OR wrong domain"
+        return ip
 
-#Check DNS 
-def DNS(ParsedUrl):
-    p = urlparse("%s" %ParsedUrl)
+
+# Check DNS
+def dns(parsed_url):
+    p = urlparse("%s" % parsed_url)
     if p.scheme:
-        StrippedUrl = stripper(ParsedUrl)
-        query(StrippedUrl)
+        stripped_url = stripper(parsed_url)
+        query(stripped_url)
     else:
-        query(ParsedUrl)
+        query(parsed_url)
 
-#Get website Error Code
-def StatusCode(URL):
-    Status = requests.get(URL).status_code
+
+# Get website Error Code
+def status_code(url):
+    Status = requests.get(url).status_code
     return Status
 
-#Process steps
-def Process(URL):
-    NetStatus = NetworkStatus()
-    if NetStatus == "On":
-        URL = UrlParser(URL)
-        p = urlparse("%s" %URL)
+
+# Display error code
+def display(url, code):
+    now = strftime("%d-%m-%Y %H:%M:%S", time.localtime())
+    if code == 200:
+        msg = print ("%s %s is UP" %(now, url))
+    elif code == 403:
+        msg = print ("%s %s is Forbidden" % (now, url))
+        msg_box = ("is 403 Forbidden")
+        voice_alert()
+        alert_box(url, msg_box)
+    elif code == 500:
+        msg = print ("%s %s can't handle request" % (now, url))
+        msg_box = ("is 500 Error")
+        voice_alert()
+        alert_box(url, msg_box)
+    else:
+        msg_box = ("is DOWN")
+        voice_alert()
+        alert_box(url, msg_box)
+    return msg
+
+
+# process steps
+def process(url):
+    net_status = network_status()
+    if net_status == "On":
+        url = usrl_parser(url)
+        p = urlparse("%s" % url)
         if p.scheme:
-            DNS(URL)
-            Code = StatusCode(URL)
-            if Code == 200:
-                now = strftime("%d-%m-%Y %H:%M:%S", time.localtime())
-                print ("%s %s is UP" %(now, URL))
-                logging.debug("%s %s is UP" %(now, URL))
-            elif Code == 403:
-                now = strftime("%d-%m-%Y %H:%M:%S", time.localtime())
-                print ("%s %s is Forbidden" %(now, URL))
-                Msg = ("is 403 Forbidden")
-                VoiceAlert()
-                AlertBox(URL, Msg)
-            elif Code == 500:
-                now = strftime("%d-%m-%Y %H:%M:%S", time.localtime())
-                print ("%s %s can't handle request" %(now, URL))
-                Msg = ("is 500 Error")
-                VoiceAlert()
-                AlertBox(URL, Msg)
-            else:
-                now = strftime("%d-%m-%Y %H:%M:%S", time.localtime())
-                print ("%s %s is DOWN" %(now, URL))
-                Msg = ("is DOWN")
-                VoiceAlert()
-                AlertBox(URL, Msg)
+            dns(url)
+            code = status_code(url)
+            display(url, code)
     else:
         now = strftime("%d-%m-%Y %H:%M:%S", time.localtime())
-        print ("%s No internet, Check your network" %now)
-        Msg = (": No internet, Check your network")
-        AlertBox(URL, Msg)
+        print ("%s No internet, Check your network" % now)
+        msg = (": No internet, Check your network")
+        alert_box(url, msg)
 
-#Countdown timer
+
+# Countdown timer
 def timer(t):
     while t:
         mins, secs = divmod(t, 60)
@@ -120,52 +131,55 @@ def timer(t):
         time.sleep(1)
         t -= 1
 
-#Voice Alert
-def VoiceAlert():
+
+# Voice Alert
+def voice_alert():
     engine = pyttsx3.init()
     engine.say("Check Website")
     engine.runAndWait()
 
-#Create Log File
-def LogFile(FileName):
+
+# Create Log File
+def log_file(file_name):
     try:
-        f = open('%s.log' %FileName,'r')
+        f = open('%s.log' % file_name, 'r')
     except FileNotFoundError:
-        f = open('%s.log' %FileName,'w')
+        f = open('%s.log' % file_name, 'w')
 
     return f
+
+
+# Exit Messege
+def exit_msg():
+    bye = print ("\nStop Monitoring ...\nBye")
+    sys.exit(0)
+    return bye
 
 
 '''
 Script starts Here
 '''
-#LogsDir()
-#LogFormat = logging.basicConfig(filename='%s' %FileName,format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-
+# log_dir()
 
 if len(sys.argv) > 1:
-    URL = sys.argv[1]
+    url = sys.argv[1]
     while True:
         try:
-            Process(URL)
-            timer (20)
+            process(url)
+            timer(20)
         except KeyboardInterrupt:
-            print ("\nStop monitoring ...")
-            print ("Bye")
-            sys.exit(0)
+            exit_msg()
 else:
     try:
-        URL = input ("URL: ")
-        FileName = stripper(URL) 
+        url = input("URL: ")
+        file_name = stripper(url)
         while True:
             try:
-                Process(URL)
-                timer (20)
+                process(url)
+                timer(20)
             except KeyboardInterrupt:
-                print ("\nStop monitoring ...")
-                print ("Bye")
-                sys.exit(0)
+                exit_msg()
     except KeyboardInterrupt:
-        print ("\nExit ...")
-        print ("\nBye")
+        print ("\nExit")
         sys.exit(0)
+
