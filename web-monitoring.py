@@ -1,7 +1,5 @@
 #!/bin/env python3
 
-# import pdb; pdb.set_trace()        # Debugger
-
 import pymsgbox                      # For POPUP
 import os                            # System Commands
 import sys                           # KeyboardInterrupt
