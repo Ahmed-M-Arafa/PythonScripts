@@ -51,14 +51,14 @@ def network_status():
 def stripper(parsed_url):
     parsed = urlparse(parsed_url)
     scheme = "%s://" % parsed.scheme
-    Url = parsed.geturl().replace(scheme, '', 1)
-    return Url
+    url = parsed.geturl().replace(scheme, '', 1)
+    return url
 
 
 # DNS Query
-def query(Url):
+def query(url):
     try:
-        ip = socket.gethostbyname(Url)
+        ip = socket.gethostbyname(url)
         return ip
     except (socket.error, socket.gaierror) as ex:
         ip = "ERROR: No records found OR wrong domain"
@@ -77,7 +77,11 @@ def dns(parsed_url):
 
 # Get website Error Code
 def status_code(url):
-    Status = requests.get(url).status_code
+    try:
+        Status = requests.get(url).status_code
+    except:
+        Status = print ("ERROR: No records found OR wrong domain name")
+        sys.exit(0)
     return Status
 
 
@@ -85,14 +89,14 @@ def status_code(url):
 def display(url, code):
     now = strftime("%d-%m-%Y %H:%M:%S", time.localtime())
     if code == 200:
-        msg = print ("%s %s is UP" % (now, url))
+        msg = print("%s %s is UP" % (now, url))
     elif code == 403:
-        msg = print ("%s %s is Forbidden" % (now, url))
+        msg = print("%s %s is Forbidden" % (now, url))
         msg_box = ("is 403 Forbidden")
         voice_alert()
         alert_box(url, msg_box)
     elif code == 500:
-        msg = print ("%s %s can't handle request" % (now, url))
+        msg = print("%s %s can't handle request" % (now, url))
         msg_box = ("is 500 Error")
         voice_alert()
         alert_box(url, msg_box)
@@ -115,7 +119,7 @@ def process(url):
             display(url, code)
     else:
         now = strftime("%d-%m-%Y %H:%M:%S", time.localtime())
-        print ("%s No internet, Check your network" % now)
+        print("%s No internet, Check your network" % now)
         msg = (": No internet, Check your network")
         alert_box(url, msg)
 
@@ -149,7 +153,7 @@ def log_file(file_name):
 
 # Exit Messege
 def exit_msg():
-    bye = print ("\nStop Monitoring ...\nBye")
+    bye = print("\nStop Monitoring ...\nBye")
     sys.exit(0)
     return bye
 
@@ -178,6 +182,5 @@ else:
             except KeyboardInterrupt:
                 exit_msg()
     except KeyboardInterrupt:
-        print ("\nExit")
+        print("\nExit")
         sys.exit(0)
-
